@@ -1,0 +1,2 @@
+# ── AWS SDK — must match SAM CLI 1.156.0 requirement ─────────
+boto3==1.42.70

@@ -1,0 +1,127 @@
+# ─────── Environment Variables ──────────
+.env
+.env.local
+.env.*.local
+.env.prod
+
+# ─────── AWS & Credentials ──────────
+aws-config
+.aws/
+credentials.json
+*.pem
+*.key
+samconfig.toml
+
+# ─────── Python ──────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.venv
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ─────── Node.js / npm ──────────
+node_modules/
+npm-debug.log
+yarn-error.log
+.npm
+.eslintcache
+.cache/
+
+# ─────── IDE & Editor ──────────
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history
+.ionide
+*.code-workspace
+Thumbs.db
+
+# ─────── Build & Distribution ──────────
+build/
+dist/
+.next/
+out/
+*.min.js
+*.min.css
+coverage/
+
+# ─────── SAM / CloudFormation ──────────
+.aws-sam/
+sam-tests/
+template.yaml.bak
+*.yaml.bak
+samconfig.toml.bak
+
+# ─────── Logs & Caches ──────────
+*.log
+logs/
+*.log.*
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ─────── OS Files ──────────
+._*
+.Spotlight-V100
+.Trashes
+
+# ─────── Docker ──────────
+docker-compose.override.yml
+
+# ─────── Testing ──────────
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ─────── Local Development ──────────
+.vscode/settings.json
+local.env
+test-resume.pdf
+test-resume.docx
+
+# ─────── Database & Temporary ──────────
+*.db
+*.sqlite
+temp/
+tmp/
+uploads/
+
+# ─────── Git ──────────
+.git/
+.gitkeep
+
+# ─────── Project Specific ──────────
+.DS_Store
+*.backup.json

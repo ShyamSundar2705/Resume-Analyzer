@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # ── Frontend Service ──────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: resume-insights/Dockerfile
+    container_name: resume-analyzer-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:4000
+      - VITE_API_KEY=test-api-key
+    depends_on:
+      - backend
+    networks:
+      - resume-analyzer-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ── Backend Service (LocalStack for AWS emulation) ────────────
+  localstack:
+    image: localstack/localstack:latest
+    container_name: resume-analyzer-localstack
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=s3,dynamodb,secretsmanager,apigateway,lambda
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - LAMBDA_EXECUTOR=docker
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "${TMPDIR}:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - resume-analyzer-network
+    restart: unless-stopped
+
+  # ── Backend API Service (Python/SAM Local) ────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: resume-analyzer-backend
+    ports:
+      - "4000:3001"
+    environment:
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - BUCKET_NAME=resume-analyzer-bucket
+      - TABLE_NAME=resume-analyzer-analysis
+      - USERS_TABLE_NAME=resume-analyzer-users
+      - GROQ_SECRET_NAME=resume-analyzer/groq-api-key
+      - JWT_SECRET=resume-analyzer-jwt-secret-key-change-in-prod
+    depends_on:
+      - localstack
+    networks:
+      - resume-analyzer-network
+    restart: unless-stopped
+    command: python -m pip install -e . && sam local start-api --host 0.0.0.0 --port 3001
+
+  # ── Database Service (DynamoDB Local) ─────────────────────────
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: resume-analyzer-dynamodb
+    ports:
+      - "8000:8000"
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    networks:
+      - resume-analyzer-network
+    restart: unless-stopped
+    command: -jar DynamoDBLocal.jar -sharedDb
+
+  # ── Redis Cache (Optional, for session storage) ────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: resume-analyzer-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - resume-analyzer-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  resume-analyzer-network:
+    driver: bridge
+
+volumes:
+  localstack-data:
+  dynamodb-data:

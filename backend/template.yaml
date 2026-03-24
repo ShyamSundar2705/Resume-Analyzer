@@ -1,0 +1,264 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Resume Analyzer - College Mini Project
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        BUCKET_NAME: !Ref ResumeBucket
+        TABLE_NAME: !Ref AnalysisTable
+        GROQ_SECRET_NAME: resume-analyzer/groq-api-key
+
+Resources:
+
+  # ── S3 Bucket ──────────────────────────────────────────────────
+  ResumeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - 'Content-Type'
+              - 'x-amz-server-side-encryption'
+              - 'x-amz-date'
+              - 'x-amz-security-token'
+              - 'Authorization'
+            AllowedMethods: [PUT]
+            AllowedOrigins: ['*']
+            MaxAge: 300
+
+  # ── DynamoDB Table: Analysis ───────────────────────────────────
+  AnalysisTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: analysis_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: analysis_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  # ── DynamoDB Table: Users (Auth) ────────────────────────────────
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: resume-analyzer-users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: user_id-index
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  # ── Groq API Key in Secrets Manager ───────────────────────────
+  GroqApiKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: resume-analyzer/groq-api-key
+      Description: Groq API key for GenAI assistant
+      SecretString: '{"api_key": "YOUR_GROQ_API_KEY_HERE"}'
+
+  # ── API Gateway ────────────────────────────────────────────────
+  ResumeApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Auth:
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          UsagePlanName: ResumeAnalyzerPlan
+          Quota:
+            Limit: 1000
+            Period: DAY
+      Cors:
+        AllowMethods: "'POST,GET,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,x-api-key'"
+        AllowOrigin: "'*'"
+
+  # ── Lambda: Auth (Signup/Login) ────────────────────────────────
+  AuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: resume-analyzer-auth
+      CodeUri: lambdas/auth/
+      Handler: handler.lambda_handler
+      Timeout: 15
+      MemorySize: 256
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref UsersTable
+          JWT_SECRET: !Sub '{{resolve:secretsmanager:resume-analyzer/jwt-secret:SecretString:secret}}'
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+              Resource: !GetAtt UsersTable.Arn
+            - Effect: Allow
+              Action:
+                - dynamodb:Query
+              Resource: !Sub "${UsersTable.Arn}/index/*"
+      Events:
+        SignupApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /auth/{action}
+            Method: POST
+        SignupDirectApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /auth
+            Method: POST
+
+  # ── JWT Secret in Secrets Manager ──────────────────────────────
+  JwtSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: resume-analyzer/jwt-secret
+      Description: JWT secret key for auth tokens
+      SecretString: '{"secret":"your-jwt-secret-key-change-in-production"}'
+
+  # ── Lambda: Presign ────────────────────────────────────────────
+  PresignFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: resume-analyzer-presign
+      CodeUri: lambdas/presign/
+      Handler: handler.lambda_handler
+      Timeout: 10
+      MemorySize: 128
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource: !Sub "${ResumeBucket.Arn}/resumes/*"
+            - Effect: Allow
+              Action:
+                - kms:GenerateDataKey
+                - kms:Encrypt
+              Resource: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub "s3.${AWS::Region}.amazonaws.com"
+      Events:
+        PresignApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /upload-url
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+
+  # ── Lambda: Analyze ────────────────────────────────────────────
+  AnalyzeFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: python3.11
+    Properties:
+      FunctionName: resume-analyzer-analyze
+      CodeUri: lambdas/analyze/
+      Handler: handler.lambda_handler
+      Timeout: 60
+      MemorySize: 1024
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: !Sub "${ResumeBucket.Arn}/resumes/*"
+            - Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub "s3.${AWS::Region}.amazonaws.com"
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+              Resource: !GetAtt AnalysisTable.Arn
+      Events:
+        AnalyzeApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /analyze
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+
+  # ── Lambda: Chat ───────────────────────────────────────────────
+  ChatFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: resume-analyzer-chat
+      CodeUri: lambdas/chat/
+      Handler: handler.lambda_handler
+      Timeout: 60
+      MemorySize: 256
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Ref GroqApiKeySecret
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+              Resource: !GetAtt AnalysisTable.Arn
+      Events:
+        ChatApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /chat
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ResumeApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  ApiKeyId:
+    Description: API Key ID (get value from AWS Console)
+    Value: !Sub "https://console.aws.amazon.com/apigateway/home?region=${AWS::Region}#/api-keys"
+  BucketName:
+    Description: S3 bucket name
+    Value: !Ref ResumeBucket

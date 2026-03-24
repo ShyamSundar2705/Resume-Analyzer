@@ -1,0 +1,141 @@
+{
+  "aliases": {
+    "js": "JavaScript", "javascript": "JavaScript", "node": "Node.js", "nodejs": "Node.js",
+    "node.js": "Node.js", "ts": "TypeScript", "typescript": "TypeScript",
+    "py": "Python", "python": "Python", "python3": "Python",
+    "java": "Java", "c#": "C#", "csharp": "C#", "c++": "C++", "cpp": "C++",
+    "go": "Go", "golang": "Go", "rust": "Rust", "kotlin": "Kotlin", "swift": "Swift",
+    "php": "PHP", "ruby": "Ruby", "scala": "Scala", "r": "R", "matlab": "MATLAB",
+    "sql": "SQL", "mysql": "MySQL", "postgres": "PostgreSQL", "postgresql": "PostgreSQL",
+    "sqlite": "SQLite", "mongodb": "MongoDB", "mongo": "MongoDB", "redis": "Redis",
+    "cassandra": "Cassandra", "dynamodb": "DynamoDB", "elasticsearch": "Elasticsearch",
+    "react": "React", "reactjs": "React", "react.js": "React",
+    "vue": "Vue.js", "vuejs": "Vue.js", "angular": "Angular", "angularjs": "Angular",
+    "next": "Next.js", "nextjs": "Next.js", "nuxt": "Nuxt.js",
+    "django": "Django", "flask": "Flask", "fastapi": "FastAPI", "spring": "Spring Boot",
+    "express": "Express.js", "laravel": "Laravel", "rails": "Ruby on Rails",
+    "aws": "AWS", "amazon web services": "AWS", "gcp": "GCP", "google cloud": "GCP",
+    "azure": "Azure", "microsoft azure": "Azure",
+    "docker": "Docker", "kubernetes": "Kubernetes", "k8s": "Kubernetes",
+    "terraform": "Terraform", "ansible": "Ansible", "jenkins": "Jenkins",
+    "github actions": "GitHub Actions", "ci/cd": "CI/CD", "devops": "DevOps",
+    "ml": "Machine Learning", "machine learning": "Machine Learning",
+    "ai": "Artificial Intelligence", "deep learning": "Deep Learning", "dl": "Deep Learning",
+    "nlp": "NLP", "natural language processing": "NLP",
+    "tensorflow": "TensorFlow", "tf": "TensorFlow", "pytorch": "PyTorch",
+    "sklearn": "scikit-learn", "scikit-learn": "scikit-learn", "pandas": "Pandas",
+    "numpy": "NumPy", "matplotlib": "Matplotlib", "seaborn": "Seaborn",
+    "spark": "Apache Spark", "apache spark": "Apache Spark", "hadoop": "Hadoop",
+    "kafka": "Apache Kafka", "apache kafka": "Apache Kafka",
+    "git": "Git", "github": "GitHub", "gitlab": "GitLab", "bitbucket": "Bitbucket",
+    "linux": "Linux", "unix": "Unix", "bash": "Bash", "shell": "Shell Scripting",
+    "html": "HTML", "css": "CSS", "sass": "SASS", "tailwind": "Tailwind CSS",
+    "rest": "REST API", "graphql": "GraphQL", "grpc": "gRPC",
+    "agile": "Agile", "scrum": "Scrum", "kanban": "Kanban", "jira": "Jira",
+    "tableau": "Tableau", "power bi": "Power BI", "powerbi": "Power BI",
+    "excel": "Excel", "word": "Microsoft Word", "powerpoint": "PowerPoint",
+    "communication": "Communication", "leadership": "Leadership", "teamwork": "Teamwork",
+    "problem solving": "Problem Solving", "critical thinking": "Critical Thinking",
+    "project management": "Project Management", "time management": "Time Management",
+    "pmp": "PMP", "aws certified": "AWS Certified", "azure certified": "Azure Certified",
+    "gcp certified": "GCP Certified", "cfa": "CFA", "cpa": "CPA",
+    "figma": "Figma", "sketch": "Sketch", "photoshop": "Photoshop", "illustrator": "Illustrator",
+    "selenium": "Selenium", "cypress": "Cypress", "jest": "Jest", "pytest": "pytest",
+    "microservices": "Microservices", "api": "API Development", "oauth": "OAuth",
+    "jwt": "JWT", "linux administration": "Linux Administration",
+    "networking": "Networking", "tcp/ip": "TCP/IP", "dns": "DNS",
+    "finance": "Finance", "accounting": "Accounting", "financial modeling": "Financial Modeling",
+    "data analysis": "Data Analysis", "data science": "Data Science",
+    "business analysis": "Business Analysis", "market research": "Market Research",
+    "content writing": "Content Writing", "seo": "SEO", "digital marketing": "Digital Marketing",
+    "social media": "Social Media Marketing", "copywriting": "Copywriting",
+    "customer service": "Customer Service", "sales": "Sales", "crm": "CRM",
+    "salesforce": "Salesforce", "hubspot": "HubSpot"
+  },
+  "categories": {
+    "hard_skill": [
+      "JavaScript", "TypeScript", "Python", "Java", "C#", "C++", "Go", "Rust", "Kotlin", "Swift",
+      "PHP", "Ruby", "Scala", "R", "MATLAB", "SQL", "MySQL", "PostgreSQL", "MongoDB", "Redis",
+      "DynamoDB", "Elasticsearch", "React", "Vue.js", "Angular", "Next.js", "Django", "Flask",
+      "FastAPI", "Spring Boot", "Express.js", "AWS", "GCP", "Azure", "Docker", "Kubernetes",
+      "Terraform", "Ansible", "Jenkins", "GitHub Actions", "CI/CD", "Machine Learning",
+      "Deep Learning", "NLP", "TensorFlow", "PyTorch", "scikit-learn", "Pandas", "NumPy",
+      "Apache Spark", "Hadoop", "Apache Kafka", "Git", "Linux", "Bash", "HTML", "CSS",
+      "Tailwind CSS", "REST API", "GraphQL", "Tableau", "Power BI", "Excel", "Figma",
+      "Selenium", "Cypress", "Jest", "pytest", "Microservices", "API Development",
+      "Financial Modeling", "Data Analysis", "Data Science", "Business Analysis", "SEO",
+      "Salesforce", "HubSpot", "DevOps", "Node.js", "SAP", "MATLAB", "SQLite", "Cassandra"
+    ],
+    "soft_skill": [
+      "Communication", "Leadership", "Teamwork", "Problem Solving", "Critical Thinking",
+      "Project Management", "Time Management", "Customer Service", "Sales", "Copywriting",
+      "Content Writing", "Digital Marketing", "Social Media Marketing", "Market Research"
+    ],
+    "certification": [
+      "PMP", "AWS Certified", "Azure Certified", "GCP Certified", "CFA", "CPA",
+      "Scrum Master", "CISSP", "CompTIA", "Google Analytics"
+    ]
+  },
+  "job_roles": {
+    "software engineer": {
+      "required": ["Python", "JavaScript", "Git", "Data Structures", "Algorithms", "SQL", "REST API"],
+      "preferred": ["React", "Node.js", "Docker", "AWS", "CI/CD", "TypeScript"],
+      "bonus": ["Kubernetes", "GraphQL", "Microservices"]
+    },
+    "data scientist": {
+      "required": ["Python", "Machine Learning", "SQL", "Pandas", "NumPy", "Data Analysis", "Statistics"],
+      "preferred": ["TensorFlow", "PyTorch", "scikit-learn", "Tableau", "Apache Spark"],
+      "bonus": ["Deep Learning", "NLP", "Apache Kafka", "AWS"]
+    },
+    "data analyst": {
+      "required": ["SQL", "Excel", "Data Analysis", "Python", "Tableau"],
+      "preferred": ["Power BI", "Python", "R", "Business Analysis"],
+      "bonus": ["Apache Spark", "dbt", "Looker", "Airflow"]
+    },
+    "frontend developer": {
+      "required": ["JavaScript", "HTML", "CSS", "React", "Git"],
+      "preferred": ["TypeScript", "Vue.js", "Tailwind CSS", "Next.js", "Figma"],
+      "bonus": ["GraphQL", "Jest", "Cypress", "Performance Optimization"]
+    },
+    "backend developer": {
+      "required": ["Python", "Java", "SQL", "REST API", "Git", "Linux"],
+      "preferred": ["Django", "Spring Boot", "Docker", "PostgreSQL", "AWS"],
+      "bonus": ["Microservices", "Kubernetes", "Apache Kafka", "GraphQL"]
+    },
+    "devops engineer": {
+      "required": ["Linux", "Docker", "Kubernetes", "CI/CD", "AWS", "Bash"],
+      "preferred": ["Terraform", "Ansible", "Jenkins", "GitHub Actions", "Python"],
+      "bonus": ["Prometheus", "Grafana", "Service Mesh", "Security Hardening"]
+    },
+    "machine learning engineer": {
+      "required": ["Python", "Machine Learning", "TensorFlow", "PyTorch", "scikit-learn", "SQL"],
+      "preferred": ["Deep Learning", "NLP", "Docker", "AWS", "Apache Spark"],
+      "bonus": ["MLOps", "Kubernetes", "Kubeflow", "Model Serving"]
+    },
+    "product manager": {
+      "required": ["Project Management", "Business Analysis", "Agile", "Communication", "Leadership"],
+      "preferred": ["Jira", "Scrum", "Data Analysis", "SQL", "Figma"],
+      "bonus": ["A/B Testing", "SQL", "User Research", "Market Research"]
+    },
+    "ui/ux designer": {
+      "required": ["Figma", "Sketch", "Communication", "User Research", "Prototyping"],
+      "preferred": ["Adobe XD", "Illustrator", "HTML", "CSS", "Usability Testing"],
+      "bonus": ["Photoshop", "Motion Design", "Front-End Development", "Accessibility"]
+    },
+    "financial analyst": {
+      "required": ["Financial Modeling", "Excel", "Accounting", "Data Analysis", "Finance"],
+      "preferred": ["SQL", "Power BI", "Tableau", "Python", "CFA"],
+      "bonus": ["VBA", "Bloomberg", "R", "SAP"]
+    },
+    "marketing manager": {
+      "required": ["Digital Marketing", "Communication", "Content Writing", "SEO", "Market Research"],
+      "preferred": ["Social Media Marketing", "Google Analytics", "HubSpot", "Copywriting"],
+      "bonus": ["Salesforce", "Paid Advertising", "CRM", "A/B Testing"]
+    },
+    "cloud architect": {
+      "required": ["AWS", "Azure", "GCP", "Architecture", "Networking", "Security"],
+      "preferred": ["Terraform", "Kubernetes", "Docker", "CI/CD", "DevOps"],
+      "bonus": ["Microservices", "Cost Optimization", "Multi-Cloud", "AWS Certified"]
+    }
+  }
+}
