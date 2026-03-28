@@ -1,3 +1,4 @@
+// src/context/AuthContext.jsx
 import { createContext, useState, useContext, useEffect } from "react";
 import { getCurrentUser, getAuthToken, logout as authLogout } from "../auth";
 
@@ -8,10 +9,12 @@ export function AuthProvider({ children }) {
     const [token, setToken] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Initialize auth state from localStorage on mount
     useEffect(() => {
         const storedUser = getCurrentUser();
         const storedToken = getAuthToken();
+        console.log("🔐 AuthContext initializing...");
+        console.log("Token from localStorage:", storedToken ? `${storedToken.substring(0, 20)}...` : "null");
+        console.log("User from localStorage:", storedUser);
         setUser(storedUser);
         setToken(storedToken);
         setLoading(false);
@@ -28,10 +31,20 @@ export function AuthProvider({ children }) {
         setToken(null);
     };
 
+    // Call this after a successful profile update to keep context in sync
+    const updateUser = (updatedFields) => {
+        setUser((prev) => {
+            const updated = { ...prev, ...updatedFields };
+            // Keep localStorage in sync
+            localStorage.setItem("user", JSON.stringify(updated));
+            return updated;
+        });
+    };
+
     const isAuthenticated = !!token && !!user;
 
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser, isAuthenticated }}>
             {children}
         </AuthContext.Provider>
     );
@@ -39,8 +52,6 @@ export function AuthProvider({ children }) {
 
 export function useAuth() {
     const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error("useAuth must be used within AuthProvider");
-    }
+    if (!context) throw new Error("useAuth must be used within AuthProvider");
     return context;
 }

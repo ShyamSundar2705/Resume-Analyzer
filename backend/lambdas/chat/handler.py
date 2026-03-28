@@ -17,16 +17,15 @@ TABLE = os.environ["TABLE_NAME"]
 GROQ_SECRET_NAME = os.environ["GROQ_SECRET_NAME"]
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-_groq_key_cache = None
 
-
-def get_groq_api_key() -> str:
-    global _groq_key_cache
-    if _groq_key_cache:
-        return _groq_key_cache
+def get_groq_api_key():
     secret = secrets_client.get_secret_value(SecretId=GROQ_SECRET_NAME)
-    _groq_key_cache = json.loads(secret["SecretString"])["api_key"]
-    return _groq_key_cache
+    secret_string = secret["SecretString"]
+    try:
+        return json.loads(secret_string)["api_key"]
+    except (json.JSONDecodeError, KeyError):
+        # Secret is stored as a raw string, not JSON
+        return secret_string.strip()
 
 
 def build_system_prompt(ctx: dict) -> str:
@@ -64,8 +63,13 @@ YOUR ROLE:
 
 
 def call_groq(api_key: str, system_prompt: str, messages: list) -> str:
+    # Validate API key format
+    if not api_key.startswith("gsk_"):
+        print(f"ERROR: API key does not start with 'gsk_', starts with: {api_key[:10]}")
+        raise ValueError("Invalid API key format - should start with gsk_")
+    
     payload = {
-        "model": "llama-3.3-70b-versatile",
+        "model": "llama-3.1-8b-instant",
         "messages": [
             {"role": "system", "content": system_prompt},
             *messages
@@ -75,18 +79,24 @@ def call_groq(api_key: str, system_prompt: str, messages: list) -> str:
     }
 
     req = urllib.request.Request(
-        GROQ_API_URL,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        },
-        method="POST"
-    )
+    GROQ_API_URL,
+    data=json.dumps(payload).encode("utf-8"),
+    headers={
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    },
+    method="POST"
+)
 
-    with urllib.request.urlopen(req, timeout=30) as response:
-        data = json.loads(response.read().decode("utf-8"))
-        return data["choices"][0]["message"]["content"]
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            return data["choices"][0]["message"]["content"]
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode("utf-8") if e.fp else "No response body"
+        print(f"Groq API error: {e.code} — {error_body}")
+        raise
 
 
 def lambda_handler(event, context):
@@ -119,7 +129,7 @@ def lambda_handler(event, context):
         messages = history[-8:] if len(history) > 8 else history
         messages.append({"role": "user", "content": message})
 
-        # Call Groq
+        # Call Groq API
         api_key = get_groq_api_key()
         system_prompt = build_system_prompt(ctx)
         reply = call_groq(api_key, system_prompt, messages)

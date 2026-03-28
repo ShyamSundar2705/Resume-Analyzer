@@ -3,89 +3,94 @@
 @tailwind utilities;
 
 @layer base {
-    body {
-        font-family: 'DM Sans', sans-serif;
-        @apply bg-background-dark text-slate-100;
-    }
-
-    .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-    }
+  * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body { transition: background-color 0.25s ease, color 0.25s ease; }
+  html.dark body  { background-color: #0d0d14; color: #f1f5f9; }
+  html:not(.dark) body { background-color: #f4f4f8; color: #18181f; }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
 }
 
 @layer components {
-    .glass-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        backdrop-filter: blur(10px);
-    }
+  /* glass-card */
+  html.dark .glass-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    backdrop-filter: blur(10px);
+  }
+  html:not(.dark) .glass-card {
+    background: #ffffff;
+    border: 1px solid #e4e4ed;
+    box-shadow: 0 1px 3px rgba(99,102,241,0.06), 0 4px 12px rgba(0,0,0,0.06);
+  }
 
-    .glass-card-solid {
-        background: rgba(22, 22, 33, 0.7);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.07);
-    }
+  /* glass-card-solid */
+  html.dark .glass-card-solid {
+    background: rgba(22,22,33,0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  html:not(.dark) .glass-card-solid {
+    background: #ffffff;
+    border: 1px solid #e4e4ed;
+    box-shadow: 0 1px 3px rgba(99,102,241,0.06), 0 4px 16px rgba(0,0,0,0.07);
+  }
 
-    .btn-primary {
-        @apply bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-all shadow-lg;
-    }
+  /* btn-primary */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-all;
+    box-shadow: 0 1px 2px rgba(99,102,241,0.3), 0 4px 12px rgba(99,102,241,0.2);
+  }
 
-    .btn-ghost {
-        @apply bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 rounded-lg transition-all;
-    }
+  /* btn-ghost */
+  html.dark .btn-ghost {
+    @apply bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 rounded-lg transition-all;
+  }
+  html:not(.dark) .btn-ghost {
+    background: #fff; border: 1px solid #e4e4ed; color: #374151;
+    border-radius: 0.5rem; transition: all 0.15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  html:not(.dark) .btn-ghost:hover { background: #f0f0f6; border-color: #c4c4d4; }
 
-    .input-dark {
-        @apply w-full bg-slate-900/50 border border-white/10 rounded-lg text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all;
-    }
+  /* input-dark — NO padding here, let Tailwind pl-* handle it */
+  html.dark .input-dark {
+    @apply w-full bg-slate-900/50 border border-white/10 rounded-lg text-slate-100
+           placeholder:text-slate-600 focus:ring-2 focus:ring-primary/30
+           focus:border-primary outline-none transition-all;
+  }
+  html:not(.dark) .input-dark {
+    @apply w-full bg-white border border-[#d4d4e0] rounded-lg text-slate-900
+           placeholder:text-slate-400 focus:ring-2 focus:ring-primary/15
+           focus:border-primary outline-none transition-all;
+  }
 
-    .nav-link {
-        @apply text-sm font-medium text-slate-400 hover:text-white transition-colors;
-    }
+  /* nav-link */
+  html.dark  .nav-link { @apply text-sm font-medium text-slate-400 hover:text-white transition-colors; }
+  html:not(.dark) .nav-link { @apply text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors; }
 
-    .section-eyebrow {
-        @apply text-[10px] font-bold tracking-[0.2em] text-accent-purple uppercase;
-    }
-
-    .chat-bubble-ai {
-        border-bottom-left-radius: 4px !important;
-    }
-
-    .chat-bubble-user {
-        border-bottom-right-radius: 4px !important;
-    }
+  .section-eyebrow { @apply text-[10px] font-bold tracking-[0.2em] text-accent-purple uppercase; }
+  .chat-bubble-ai   { border-bottom-left-radius:  4px !important; }
+  .chat-bubble-user { border-bottom-right-radius: 4px !important; }
 }
 
-/* Login page syntax characters animation */
+/* Floating syntax — color/opacity from React inline style */
 @keyframes drift {
-
-    0%,
-    100% {
-        transform: translateY(0px);
-    }
-
-    50% {
-        transform: translateY(-20px);
-    }
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  33%      { transform: translateY(-14px) rotate(1deg); }
+  66%      { transform: translateY(-6px) rotate(-1deg); }
 }
-
 .code-syntax {
-    position: fixed;
-    color: #94a3b8;
-    opacity: 0.18;
-    pointer-events: none;
-    user-select: none;
-    z-index: 0;
-    animation: drift ease-in-out infinite;
-    font-family: monospace;
+  position: fixed; pointer-events: none; user-select: none; z-index: 0;
+  font-family: 'DM Mono','Fira Code',monospace; font-weight: 500;
+  animation: drift ease-in-out infinite;
 }
 
-/* Processing page progress animation */
-@keyframes progress-fill {
-    from {
-        width: 0%;
-    }
+@keyframes progress-fill { from { width: 0%; } to { width: 40%; } }
 
-    to {
-        width: 40%;
-    }
-}
+/* Light mode scrollbar */
+html:not(.dark) ::-webkit-scrollbar { width: 6px; }
+html:not(.dark) ::-webkit-scrollbar-track { background: #f4f4f8; }
+html:not(.dark) ::-webkit-scrollbar-thumb { background: #d4d4e0; border-radius: 99px; }
+html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: #b4b4c8; }

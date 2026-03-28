@@ -11,7 +11,7 @@ Globals:
       Variables:
         BUCKET_NAME: !Ref ResumeBucket
         TABLE_NAME: !Ref AnalysisTable
-        GROQ_SECRET_NAME: resume-analyzer/groq-api-key
+        GROQ_SECRET_NAME: groq_api_key
 
 Resources:
 
@@ -80,13 +80,7 @@ Resources:
         AttributeName: ttl
         Enabled: true
 
-  # ── Groq API Key in Secrets Manager ───────────────────────────
-  GroqApiKeySecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Name: resume-analyzer/groq-api-key
-      Description: Groq API key for GenAI assistant
-      SecretString: '{"api_key": "YOUR_GROQ_API_KEY_HERE"}'
+
 
   # ── API Gateway ────────────────────────────────────────────────
   ResumeApi:
@@ -165,11 +159,13 @@ Resources:
             - Effect: Allow
               Action:
                 - s3:PutObject
+                - s3:GetObject
               Resource: !Sub "${ResumeBucket.Arn}/resumes/*"
             - Effect: Allow
               Action:
                 - kms:GenerateDataKey
                 - kms:Encrypt
+                - kms:Decrypt
               Resource: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/*"
               Condition:
                 StringEquals:
@@ -180,6 +176,14 @@ Resources:
           Properties:
             RestApiId: !Ref ResumeApi
             Path: /upload-url
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
+        DownloadUrlApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /download-url
             Method: POST
             Auth:
               ApiKeyRequired: true
@@ -223,7 +227,7 @@ Resources:
             Auth:
               ApiKeyRequired: true
 
-  # ── Lambda: Chat ───────────────────────────────────────────────
+    # ── Lambda: Chat ───────────────────────────────────────────────
   ChatFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -237,7 +241,7 @@ Resources:
             - Effect: Allow
               Action:
                 - secretsmanager:GetSecretValue
-              Resource: !Ref GroqApiKeySecret
+              Resource: arn:aws:secretsmanager:ap-south-1:567251175771:secret:groq_api_key*
             - Effect: Allow
               Action:
                 - dynamodb:GetItem
@@ -252,6 +256,95 @@ Resources:
             Auth:
               ApiKeyRequired: true
 
+  # ── Lambda: User Profile ───────────────────────────────────────
+  UserProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: resume-analyzer-user-profile
+      CodeUri: lambdas/user-profile/
+      Handler: handler.lambda_handler
+      Timeout: 10
+      MemorySize: 128
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref UsersTable
+          JWT_SECRET: !Sub '{{resolve:secretsmanager:resume-analyzer/jwt-secret:SecretString:secret}}'
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem   # needed for PUT /user-profile
+              Resource: !GetAtt UsersTable.Arn
+      Events:
+        UserProfileApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /user-profile
+            Method: GET
+            Auth:
+              ApiKeyRequired: true
+        UserProfileUpdateApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /user-profile
+            Method: PUT
+            Auth:
+              ApiKeyRequired: true
+  # ── Lambda: Resume History ─────────────────────────────────────
+  ResumeHistoryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: resume-analyzer-resume-history
+      CodeUri: lambdas/resume-history/
+      Handler: handler.lambda_handler
+      Timeout: 10
+      MemorySize: 128
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:Scan
+              Resource: !GetAtt AnalysisTable.Arn
+      Events:
+        ResumeHistoryApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /resume-history
+            Method: GET
+            Auth:
+              ApiKeyRequired: true
+  ChangePasswordFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: resume-analyzer-change-password
+      CodeUri: lambdas/auth/
+      Handler: handler.lambda_handler
+      Timeout: 15
+      MemorySize: 256
+      Environment:
+        Variables:
+          USERS_TABLE_NAME: !Ref UsersTable
+          JWT_SECRET: !Sub '{{resolve:secretsmanager:resume-analyzer/jwt-secret:SecretString:secret}}'
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+              Resource: !GetAtt UsersTable.Arn
+      Events:
+        ChangePasswordApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ResumeApi
+            Path: /change-password
+            Method: POST
+            Auth:
+              ApiKeyRequired: true
 Outputs:
   ApiUrl:
     Description: API Gateway endpoint URL

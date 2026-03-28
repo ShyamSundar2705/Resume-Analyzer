@@ -363,8 +363,22 @@ def lambda_handler(event, context):
 
         # 7. Build result
         analysis_id = f"ana_{uuid.uuid4().hex[:10]}"
+        
+        # Get user email from request body (for resume history tracking)
+        user_email = body.get("user_email", "anonymous")
+        file_name = body.get("file_name", "resume")
+        file_key = body.get("file_key", "")  # S3 file key for downloading
+        
+        print(f"📝 Building analysis result:")
+        print(f"   - file_key from request: '{file_key}'")
+        print(f"   - file_name: '{file_name}'")
+        print(f"   - user_email: '{user_email}'")
+        
         result = {
             "analysis_id": analysis_id,
+            "user_email": user_email,
+            "file_name": file_name,
+            "file_key": file_key,
             "job_title": job_title,
             "match_score": scoring["match_score"],
             "sub_scores": scoring["sub_scores"],
@@ -374,13 +388,20 @@ def lambda_handler(event, context):
             "jd_skills": jd_skills,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
+        
+        print(f"✓ Result object keys: {list(result.keys())}")
 
         # 8. Store in DynamoDB (TTL: 7 days)
         table = ddb.Table(TABLE)
-        table.put_item(Item=sanitize_for_dynamo({
+        sanitized_item = sanitize_for_dynamo({
             **result,
             "ttl": int(datetime.now(timezone.utc).timestamp()) + (7 * 24 * 3600)
-        }))
+        })
+        print(f"💾 Storing analysis in DynamoDB:")
+        print(f"   - Keys in sanitized item: {list(sanitized_item.keys())}")
+        print(f"   - file_key in item: {sanitized_item.get('file_key')}")
+        
+        table.put_item(Item=sanitized_item)
 
         print(f"Analysis complete: {analysis_id}, score: {scoring['match_score']}")
         return {

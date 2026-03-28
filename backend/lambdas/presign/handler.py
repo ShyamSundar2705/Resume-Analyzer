@@ -13,12 +13,45 @@ MAX_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB
 def lambda_handler(event, context):
     headers = {
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "Content-Type,x-api-key",
+        "Access-Control-Allow-Headers": "Content-Type,x-api-key,Authorization",
+        "Access-Control-Allow-Methods": "POST,GET,OPTIONS",
         "Content-Type": "application/json"
     }
 
     try:
         body = json.loads(event.get("body", "{}"))
+        print(f"📥 Presign request body: {body}")
+        
+        # Handle download requests
+        if "file_key" in body:
+            file_key = body.get("file_key", "").strip()
+            if not file_key:
+                return _error(400, "file_key is required", headers)
+            
+            print(f"📥 Download request for file_key: {file_key}")
+            
+            # Generate presigned GET URL (1 hour expiry for downloads)
+            download_url = s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": BUCKET,
+                    "Key": file_key,
+                },
+                ExpiresIn=3600
+            )
+            
+            print(f"✓ Generated download URL for: {file_key}")
+            
+            return {
+                "statusCode": 200,
+                "headers": headers,
+                "body": json.dumps({
+                    "download_url": download_url,
+                    "file_key": file_key
+                })
+            }
+        
+        # Handle upload requests (original logic)
         filename = body.get("filename", "").strip()
         content_type = body.get("content_type", "").strip()
 
@@ -54,6 +87,8 @@ def lambda_handler(event, context):
             ExpiresIn=300
         )
 
+        print(f"✓ Generated upload URL for: {file_key}")
+        
         return {
             "statusCode": 200,
             "headers": headers,
@@ -62,6 +97,16 @@ def lambda_handler(event, context):
                 "file_key": file_key
             })
         }
+    
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON parse error: {e}")
+        return _error(400, f"Invalid JSON: {str(e)}", headers)
+    
+    except Exception as e:
+        print(f"❌ Error in presign: {e}")
+        import traceback
+        traceback.print_exc()
+        return _error(500, f"Internal error: {str(e)}", headers)
 
     except Exception as e:
         print(f"ERROR in presign: {e}")
